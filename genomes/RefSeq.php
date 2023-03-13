@@ -1,22 +1,18 @@
 <?php
-// $chr_class = new CreateGene;
-// $chr_class->CreateChrs("genomes/TAIR10.1");
-// echo "The process is completed! Chromosome is sorted!!!";
-// $chr_class->CreateGenes("genomes/TAIR10.1");
-// echo "The process is completed! Genes are created!!!";
+//File types: genomic.fna, assembly_report.txt, rna_from_genomic.fna.gz, cds_from_genomic.fna.gz
 class RefSeq
 {
     function __construct()
     {
-        $this->genomes_folder="genomes";
     }
-    function Retrieve($assembly)
+    function Retrieve($assembly, $folder, $file_types)
     {
+        $this->genomes_folder=$folder;
         $file=fopen(__DIR__."/assembly_summary_refseq.txt", "r");
         while($line=fgets($file, 1000000))
         {
             $pts=explode("\t", trim($line));
-            if($pts[0]==$assembly)
+            if($pts[0]==$assembly or strtolower($pts[7])==strtolower($assembly))
             {
                 $url=$pts[19];
                 $accession=$pts[0];
@@ -34,20 +30,40 @@ class RefSeq
         if(!file_exists("$this->genomes_folder/$folder"))
             mkdir("$this->genomes_folder/$folder");
         $assembly=str_replace(" ", "_", $assembly);
-        $this->download_file("$url/{$accession}_{$assembly}_genomic.fna.gz", "$this->genomes_folder/$folder/genomic.fna");
-        $this->download_file("$url/{$accession}_{$assembly}_genomic.gtf.gz", "$this->genomes_folder/$folder/genomic.gtf");
+        foreach($file_types as $type=>$out_name)
+            $this->download_file("$url/{$accession}_{$assembly}_$type.gz", "$this->genomes_folder/$folder/$out_name");
         $path="$this->genomes_folder/$folder";
-        $this->CreateChrs($path);
-        $this->CreateGenes($path);
-        if(file_exists("$path/genomic.fna"))
-            unlink("$path/genomic.fna");
-        if(file_exists("$path/genomic.gtf"))
-            unlink("$path/genomic.gtf");
         return $folder;
+    }
+    function ParseReport($file, $filters)
+    {
+        $out=[];
+        $data=file($file);
+        foreach($data as $str)
+        {
+            $pts=explode("\t", $str);
+            if(count($pts)<5)
+                continue;
+            $record=array("name"=>$pts[0], "type"=>$pts[3], "refseq_id"=>$pts[6]);
+            if(count($filters))
+            {
+                $found=0;
+                foreach($filters as $p=>$v)
+                {
+                    if($record["$p"]==$v)
+                    {
+                        $found=1;
+                        break;
+                    }
+                }
+                if(!$found)
+                    continue;
+            }
+            $out[]=$record;
+        }
     }
 	function download_file($source, $dest)
 	{
-        echo "$source<br>";
 		$this->DownloadFile($source, "$dest.gz");
 		$this->UnzipFile("$dest.gz", $dest);
 		if(file_exists("$dest.gz"))
@@ -60,7 +76,7 @@ class RefSeq
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($curl, CURLOPT_VERBOSE, 1);
 		curl_setopt($curl, CURLOPT_FTP_USE_EPSV, 0);
-        curl_setopt($curl, CURLOPT_PROXY,"192.168.192.1:3211");
+        // curl_setopt($curl, CURLOPT_PROXY,"192.168.192.1:3211");
 		curl_setopt($curl, CURLOPT_TIMEOUT, 300);
 		$outfile = fopen($dest, 'wb');
 		curl_setopt($curl, CURLOPT_FILE, $outfile);
