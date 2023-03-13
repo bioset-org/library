@@ -35,32 +35,20 @@ class RefSeq
         $path="$this->genomes_folder/$folder";
         return $folder;
     }
-    function ParseReport($file, $filters)
+    static function ParseReport($file)
     {
-        $out=[];
-        $data=file($file);
-        foreach($data as $str)
+        $f=fopen($file, "r");
+        while($line=fgets($f))
         {
-            $pts=explode("\t", $str);
+            $pts=explode("\t", $line);
             if(count($pts)<5)
                 continue;
-            $record=array("name"=>$pts[0], "type"=>$pts[3], "refseq_id"=>$pts[6]);
-            if(count($filters))
-            {
-                $found=0;
-                foreach($filters as $p=>$v)
-                {
-                    if($record["$p"]==$v)
-                    {
-                        $found=1;
-                        break;
-                    }
-                }
-                if(!$found)
-                    continue;
-            }
-            $out[]=$record;
+            $type=$pts[1];
+            if(!isset($out["$type"]))
+                $out["$type"]=[];
+            $out["$type"][]=["name"=>$pts[2], "type"=>$pts[3], "size"=>$pts[7], "refseq_id"=>$pts[6]];
         }
+        return $out;
     }
     function UpdateSummary()
     {
@@ -80,10 +68,10 @@ class RefSeq
 	function download_file($source, $dest)
 	{
         $tmp_dest=$dest;
-        if(strstr($source, ".gz"))
+        if(strstr($source, ".gz") and !strstr($dest, ".gz"))
             $tmp_dest="$dest.gz";
 		Common::DownloadFile($source, $tmp_dest);
-        if(strstr($source, ".gz"))
+        if(strstr($source, ".gz") and !strstr($dest, ".gz"))
         {
 		    Common::UnzipFile($tmp_dest, $dest);
             if(file_exists($tmp_dest))

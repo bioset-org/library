@@ -1,6 +1,58 @@
 <?php
 class KMers
-{    
+{   
+	function CalculateFASTAKMers($file, $size, $gz=0, $filters=[])
+	{
+		if($gz)
+			$f=gzopen($file, "r");
+		else
+			$f=fopen($file, "r");
+		$calculate=1;
+		$last="";
+		$id="";
+		while($line=fgets($f))
+		{
+			$line=trim($line);
+			if(strstr($line, ">"))
+			{
+				if(isset($kmers) and $id!="" and $calculate==1)
+					$out["$id"]=$kmers;
+				$pts=explode(" ", $line);
+				$id=str_replace(">", "", $pts[0]);
+				$kmers=$this->prepare_kmer_list($size);
+				if(count($filters) and !isset($filters["include"]["$id"]))
+					$calculate=0;
+				else
+					$calculate=1;
+				continue;
+			}
+			if(!$calculate)
+				continue;
+			$line=strtoupper($line);
+			$line=$last.$line;
+			$len=strlen($line);
+			for($i=0;$i<$len-$size;$i++)
+			{
+				$kmer=substr($line, $i, $size);
+				$pos=self::GetSequenceBlockNumber($kmer, $size);
+				if($pos==-1)
+					continue;
+				$kmers[$pos]++;
+			}
+			$last=substr($line, $len-($size-1));
+		}
+		print_r($out);
+	}
+	function prepare_kmer_list($size)
+	{
+		$out=[];
+		$qt=pow(4, $size);
+		for($i=0;$i<$qt;$i++)
+		{
+			$out[]=0;
+		}
+		return $out;
+	}
 	static function GetSequenceByNumber($num, $size)
 	{
 		$seq="";
