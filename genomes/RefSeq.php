@@ -8,16 +8,16 @@ class RefSeq
     function Retrieve($assembly, $folder, $file_types)
     {
         $this->genomes_folder=$folder;
-        $file=fopen(__DIR__."/assembly_summary_refseq.txt", "r");
+        $file=gzopen(__DIR__."/refseq_summary.gz", "r");
         while($line=fgets($file, 1000000))
         {
             $pts=explode("\t", trim($line));
-            if($pts[0]==$assembly or strtolower($pts[7])==strtolower($assembly))
+            if($pts[0]==$assembly or strtolower($pts[1])==strtolower($assembly))
             {
-                $url=$pts[19];
+                $url="https://ftp.ncbi.nlm.nih.gov/genomes/all/".$pts[3];
                 $accession=$pts[0];
-                $assembly=$pts[15];
-                $folder=str_replace(" ", "_", $pts[7]);
+                $assembly=$pts[2];
+                $folder=str_replace(" ", "_", $pts[1]);
                 $folder=str_replace("'", "", $folder);
                 $folder=str_replace("/", "", $folder);
             }
@@ -31,7 +31,7 @@ class RefSeq
             mkdir("$this->genomes_folder/$folder");
         $assembly=str_replace(" ", "_", $assembly);
         foreach($file_types as $type=>$out_name)
-            $this->download_file("$url/{$accession}_{$assembly}_$type.gz", "$this->genomes_folder/$folder/$out_name");
+            $this->download_file("$url/{$accession}_{$assembly}_$type", "$this->genomes_folder/$folder/$out_name");
         $path="$this->genomes_folder/$folder";
         return $folder;
     }
@@ -62,43 +62,33 @@ class RefSeq
             $out[]=$record;
         }
     }
+    function UpdateSummary()
+    {
+        $tmp=__DIR__."/summary.txt";
+        $this->download_file("https://ftp.ncbi.nlm.nih.gov/genomes/refseq/assembly_summary_refseq.txt", $tmp);
+        $f=fopen($tmp, "r");
+        $out=gzopen(__DIR__."/refseq_summary.gz", "w");
+        while($line=fgets($f))
+        {
+            $pts=explode("\t", $line);
+            $pts[19]=str_replace("https://ftp.ncbi.nlm.nih.gov/genomes/all/", "", $pts[19]);
+            gzwrite($out, "$pts[0]\t$pts[7]\t$pts[15]\t$pts[19]\n");
+        }
+        gzclose($out);
+        unlink($tmp);
+    }
 	function download_file($source, $dest)
 	{
-		$this->DownloadFile($source, "$dest.gz");
-		$this->UnzipFile("$dest.gz", $dest);
-		if(file_exists("$dest.gz"))
-			unlink("$dest.gz");
-	}
-    function DownloadFile($source, $dest)
-	{
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_URL,"$source");
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($curl, CURLOPT_VERBOSE, 1);
-		curl_setopt($curl, CURLOPT_FTP_USE_EPSV, 0);
-        // curl_setopt($curl, CURLOPT_PROXY,"192.168.192.1:3211");
-		curl_setopt($curl, CURLOPT_TIMEOUT, 300);
-		$outfile = fopen($dest, 'wb');
-		curl_setopt($curl, CURLOPT_FILE, $outfile);
-		$info = curl_exec($curl);
-		fclose($outfile);
-		curl_close($curl);
-	}
-	function UnzipFile($source, $dest)
-	{
-		$zh = gzopen($source, 'r');
-		$h = fopen($dest, 'w');
-		if (!$zh) {
-			return __('Downloaded file could not be opened for reading.', 'geoip-detect');
-		}
-		if (!$h) {
-			return sprintf(__('Database could not be written (%s).', 'geoip-detect'), $outFile);
-		}
-		while (($string = gzread($zh, 4096)) != false) {
-			fwrite($h, $string, strlen($string));
-		}
-		gzclose($zh);
-		fclose($h);
+        $tmp_dest=$dest;
+        if(strstr($source, ".gz"))
+            $tmp_dest="$dest.gz";
+		Common::DownloadFile($source, $tmp_dest);
+        if(strstr($source, ".gz"))
+        {
+		    Common::UnzipFile($tmp_dest, $dest);
+            if(file_exists($tmp_dest))
+                unlink($tmp_dest);
+        }
 	}
 }
 ?>
