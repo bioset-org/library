@@ -67,6 +67,7 @@ class RefSeq
     }
 	function download_file($source, $dest)
 	{
+        echo "Download $source\n";
         $tmp_dest=$dest;
         if(strstr($source, ".gz") and !strstr($dest, ".gz"))
             $tmp_dest="$dest.gz";

@@ -19,6 +19,26 @@ class Common
 		fclose($outfile);
 		curl_close($curl);
 	}
+	function DeleteFolder($folder)
+    {
+        $cur_file=$folder;
+        if(!file_exists($cur_file))
+            return 1;
+        if(!is_dir($cur_file))
+            unlink($cur_file);
+        else
+        {
+            $files=scandir($cur_file);
+            foreach($files as $folder_file)
+            {
+                if($folder_file=="." or $folder_file=="..")
+                    continue;
+                $res=$this->DeleteFolder("$cur_file/$folder_file");
+            }
+            rmdir($cur_file);
+        }
+        return 1;
+    }
 	static function UnzipFile($source, $dest)
 	{
 		$zh = gzopen($source, 'r');

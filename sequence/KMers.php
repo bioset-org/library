@@ -41,7 +41,7 @@ class KMers
 			}
 			$last=substr($line, $len-($size-1));
 		}
-		print_r($out);
+		return $out;
 	}
 	function prepare_kmer_list($size)
 	{
