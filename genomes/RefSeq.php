@@ -46,7 +46,7 @@ class RefSeq
             $type=$pts[1];
             if(!isset($out["$type"]))
                 $out["$type"]=[];
-            $out["$type"][]=["name"=>$pts[2], "type"=>$pts[3], "size"=>$pts[7], "refseq_id"=>$pts[6]];
+            $out["$type"][]=["name"=>$pts[2], "type"=>$pts[3], "size"=>$pts[8], "refseq_id"=>$pts[6]];
         }
         return $out;
     }
