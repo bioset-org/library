@@ -41,6 +41,8 @@ class KMers
 			}
 			$last=substr($line, $len-($size-1));
 		}
+		if(isset($kmers) and $id!="" and $calculate==1)
+			$out["$id"]=$kmers;
 		return $out;
 	}
 	function prepare_kmer_list($size)
