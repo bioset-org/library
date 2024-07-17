@@ -19,7 +19,7 @@ class KMers
 					$out["$id"]=$kmers;
 				$pts=explode(" ", $line);
 				$id=str_replace(">", "", $pts[0]);
-				$kmers=$this->prepare_kmer_list($size);
+				$kmers=$this->PrepareKMerList($size);
 				if(count($filters) and !isset($filters["include"]["$id"]))
 					$calculate=0;
 				else
@@ -45,7 +45,7 @@ class KMers
 			$out["$id"]=$kmers;
 		return $out;
 	}
-	function prepare_kmer_list($size)
+	function PrepareKMerList($size)
 	{
 		$out=[];
 		$qt=pow(4, $size);
@@ -63,8 +63,8 @@ class KMers
 			$block_size = 1;
 			for ($j = $i; $j < $size - 1; $j++)
 				$block_size *= 4;
-			$offset = $num / $block_size;
-			//cout << i << " - "<<block_size<<" - "<<offset <<"- - "<< num<< "\n";
+			$offset = floor($num / $block_size);
+			// echo "i - $i - block_size - $block_size - offset - $offset - num - $num\n";
 			if (!$offset)
 				$seq .= 'A';
 			else if ($offset == 1)
