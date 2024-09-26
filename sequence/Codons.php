@@ -25,24 +25,24 @@ class Codons
 		}
 		return $out;
 	}
-	function CheckORF($gene)
+	static function CheckORF($gene)
 	{
 		if(substr($gene, 0, 3)!="ATG")
 			return false;
-			if(strlen($gene)%3!=0)
+		if(strlen($gene)%3!=0)
+			return false;
+		$stop_codon=substr($gene, strlen($gene)-3, 3);
+		if($stop_codon!="TGA" and $stop_codon!="TAA" and $stop_codon!="TAG")
+			return false;
+		for($i=0;$i<strlen($gene);$i+=3)
+		{
+			$codon=substr($gene, $i, 3);
+			if(!isset($this->codon2acid["$codon"]))
+			{
 				return false;
-				$stop_codon=substr($gene, strlen($gene)-3, 3);
-				if($stop_codon!="TGA" and $stop_codon!="TAA" and $stop_codon!="TAG")
-					return false;
-					for($i=0;$i<strlen($gene);$i+=3)
-					{
-						$codon=substr($gene, $i, 3);
-						if(!isset($this->codon2acid["$codon"]))
-						{
-							return false;
-						}
-					}
-					return true;
+			}
+		}
+		return true;
 	}
 	function CDS2Acids($seq)
 	{

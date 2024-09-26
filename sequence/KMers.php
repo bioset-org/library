@@ -45,7 +45,7 @@ class KMers
 			$out["$id"]=$kmers;
 		return $out;
 	}
-	function PrepareKMerList($size)
+	static function PrepareKMerList($size)
 	{
 		$out=[];
 		$qt=pow(4, $size);
@@ -79,6 +79,7 @@ class KMers
 	}
 	static function GetSequenceBlockNumber($str, $size)
 	{
+		$str=strtoupper($str);
 		$loc = 0;
 		for ($i = 0; $i<$size; $i++)
 		{

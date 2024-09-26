@@ -1,10 +1,13 @@
 <?php
 class ExtractGenes
 {
-    function ExtractGenes($file, $params)
+    function GetSequences($file, $params)
     {
         $is_json=(isset($params["is_json"])) ? 1 : 0;
-        $f=fopen($file, "r");
+        if(!isset($params["gz"]))
+            $f=fopen($file, "r");
+        else
+            $f=gzopen($file, "r");
         $seq="";
         $out=[];
         while($line=fgets($f))
@@ -25,6 +28,7 @@ class ExtractGenes
                 if($seq!="")
                 {
                     $header["sequence"]=$seq;
+                    $header["header"]=trim($line);
                     $seq="";
                     $out["$seq_id"]=$header;
                 }
